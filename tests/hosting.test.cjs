@@ -99,3 +99,40 @@ test("reception cannot delete a completed visit", async () => {
   const visit = demoClinicSnapshot.visits.find((entry) => entry.status === "Completed");
   await assert.rejects(clinic.deleteQueuedVisit(visit.id), /Only an active queue visit/);
 });
+
+test("patient edits update demographics and active visits while preserving issued bills", async () => {
+  const snapshot = structuredClone(demoClinicSnapshot);
+  const completed = snapshot.visits.find((entry) => entry.status === "Completed");
+  snapshot.visits.push({ ...completed, id: "active-test", status: "Waiting", receiptIssuedAt: null });
+  const { clinic, state } = createClinic(snapshot);
+  const patient = await clinic.updatePatient(completed.patientId, { name: "Updated name", age: 42, phone: "0912345678" });
+  assert.equal(patient.name, "Updated name");
+  assert.equal(patient.age, 42);
+  assert.equal(patient.phone, "0912345678");
+  assert.equal(state().visits.find((visit) => visit.id === "active-test").patientName, "Updated name");
+  assert.deepEqual(state().visits.find((visit) => visit.id === completed.id), completed);
+});
+
+test("patient deletion preserves history and prevents future check-in", async () => {
+  const { clinic, state } = createClinic(demoClinicSnapshot);
+  const patientId = demoClinicSnapshot.patients[0].id;
+  await clinic.deletePatient(patientId);
+  assert.ok(state().patients.find((patient) => patient.id === patientId).archivedAt);
+  assert.deepEqual(state().visits, demoClinicSnapshot.visits);
+  const reread = await clinic.getClinicSnapshot();
+  assert.ok(reread.patients.find((patient) => patient.id === patientId).archivedAt);
+  await assert.rejects(clinic.createVisit({ patientId, symptoms: [] }), /Patient not found/);
+  await assert.rejects(clinic.updatePatient(patientId, { name: "Restored", age: 21, phone: "09" }), /already removed/);
+});
+
+test("patient edits reject empty names, invalid ages, and empty phone numbers", async () => {
+  const { clinic } = createClinic(demoClinicSnapshot);
+  const patientId = demoClinicSnapshot.patients[0].id;
+  for (const details of [
+    { name: " ", age: 20, phone: "09" },
+    { name: "Test", age: -1, phone: "09" },
+    { name: "Test", age: 20, phone: " " },
+  ]) {
+    await assert.rejects(clinic.updatePatient(patientId, details));
+  }
+});

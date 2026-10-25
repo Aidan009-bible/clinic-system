@@ -8,6 +8,7 @@ export type Patient = {
   phone: string;
   tags: string[];
   lastVisitAt: string;
+  archivedAt?: string | null;
 };
 
 export type VisitStatus =

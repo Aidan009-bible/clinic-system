@@ -128,7 +128,7 @@ export function PortalOverview({
           { label: "Medicines", value: snapshot.medicines.length, detail: `${lowStock.length} low-stock reminders` },
         ]
       : [
-          { label: "Registered patients", value: snapshot.patients.length, detail: "Total patient records" },
+          { label: "Registered patients", value: snapshot.patients.filter((patient) => !patient.archivedAt).length, detail: "Total patient records" },
           { label: "Waiting", value: waiting, detail: "Active visits awaiting doctor" },
           { label: "Ready to bill", value: billing, detail: "Doctor finished" },
           { label: "Stock reminders", value: lowStock.length, detail: `At or below ${LOW_STOCK_LIMIT} units` },

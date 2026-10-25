@@ -4,6 +4,16 @@ This file tracks project changes from the UI/UX redesign phase onward.
 
 ## 2026-10-26
 
+### Existing-patient editing and deletion
+
+- Added reception row actions with a focused dialog for editing name, age, and phone, plus confirmed deletion from the existing-patient list.
+- Added role-protected patient update/delete endpoints, input validation, and dashboard revalidation.
+- Patient removal preserves medical and billing history, excludes removed patients from current registries and counts, and blocks new check-ins for removed records.
+- Active queue names follow demographic corrections; completed receipts preserve their original details.
+- Added tests for history preservation, archived check-in prevention, and input validation.
+
+Changed files: `src/lib/types.ts`, `src/lib/clinic-server.ts`, `src/app/api/patients/[id]/route.ts`, `src/components/patient-row-actions.tsx`, `src/components/reception-actions.tsx`, `src/app/admin/patients/page.tsx`, `src/app/admin/overview/page.tsx`, `src/components/portal-overview.tsx`, `tests/hosting.test.cjs`, `CHANGELOG.md`.
+
 ### Live Supabase and Vercel setup
 
 - Resumed the existing Clinic-DEMO Supabase Free project and applied the clinic_state schema with row level security enabled.

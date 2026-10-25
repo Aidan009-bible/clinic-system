@@ -67,6 +67,7 @@ function normalizePatient(patient: Record<string, unknown>): Patient | null {
     age: Number(patient.age ?? 0),
     phone: String(patient.phone ?? ""),
     tags: Array.isArray(patient.tags) ? patient.tags.map(String) : [],
+    archivedAt: patient.archivedAt == null ? null : String(patient.archivedAt),
     lastVisitAt: String(
       patient.lastVisitAt ??
         patient.last_visit_at ??
@@ -472,24 +473,61 @@ export async function authenticateDemoUser(username: string, password: string) {
   );
 }
 
+function validatePatientDetails(input: { name: string; age: number; phone: string }) {
+  const name = input.name.trim();
+  const phone = input.phone.trim();
+  if (!name || name.length > 120) throw new Error("Enter a patient name between 1 and 120 characters.");
+  if (!Number.isInteger(input.age) || input.age < 1 || input.age > 150) throw new Error("Enter an age between 1 and 150.");
+  if (!phone || phone.length > 40) throw new Error("Enter a phone number up to 40 characters.");
+  return { name, age: input.age, phone };
+}
+
 export async function createPatient(input: {
   name: string;
   age: number;
   phone: string;
   tags: string[];
 }) {
+  const details = validatePatientDetails(input);
   const snapshot = await readLocalStore();
   const patient: Patient = {
     id: buildId("pat"),
     patientCode: buildPatientCode(snapshot),
-    name: input.name.trim(),
-    age: input.age,
-    phone: input.phone.trim(),
+    ...details,
     tags: input.tags,
     lastVisitAt: new Date().toISOString(),
   };
 
   snapshot.patients.unshift(patient);
+  await writeLocalStore(snapshot);
+  return patient;
+}
+
+export async function updatePatient(patientId: string, input: { name: string; age: number; phone: string }) {
+  const details = validatePatientDetails(input);
+  const snapshot = await readLocalStore();
+  const patient = snapshot.patients.find((entry) => entry.id === patientId && !entry.archivedAt);
+  if (!patient) throw new Error("Patient not found or already removed.");
+  Object.assign(patient, details);
+
+  for (const visit of snapshot.visits) {
+    if (visit.patientId === patient.id && visit.status !== "Completed" && !visit.receiptIssuedAt) {
+      visit.patientName = patient.name;
+    }
+  }
+
+  await writeLocalStore(snapshot);
+  return patient;
+}
+
+export async function deletePatient(patientId: string) {
+  const snapshot = await readLocalStore();
+  const patient = snapshot.patients.find((entry) => entry.id === patientId);
+  if (!patient) throw new Error("Patient not found.");
+  if (patient.archivedAt) return patient;
+
+  // Keep the patient link intact for consultation history and issued receipts.
+  patient.archivedAt = new Date().toISOString();
   await writeLocalStore(snapshot);
   return patient;
 }
@@ -501,7 +539,7 @@ export async function createVisit(input: {
   const snapshot = await readLocalStore();
   const patient = snapshot.patients.find((entry) => entry.id === input.patientId);
 
-  if (!patient) {
+  if (!patient || patient.archivedAt) {
     throw new Error("Patient not found.");
   }
 

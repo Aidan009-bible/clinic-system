@@ -136,7 +136,7 @@ export default async function AdminOverviewPage() {
           </div>
           <p className="mt-4 text-sm font-medium text-[#61758a]">Registered patients</p>
           <p className="mt-2 text-3xl font-semibold tracking-tight text-[#071b33]">
-            {snapshot.patients.length}
+            {snapshot.patients.filter((patient) => !patient.archivedAt).length}
           </p>
           <div className="mt-3 flex items-center justify-between gap-3 text-xs text-[#61758a]">
             <span>Total patient records</span>

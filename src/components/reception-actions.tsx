@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useDeferredValue, useState } from "react";
 
 import { MedicineStockTable } from "@/components/medicine-stock-table";
+import { PatientRowActions } from "@/components/patient-row-actions";
 import type { Medicine, Patient, Visit } from "@/lib/types";
 
 function formatDateTime(value: string | null) {
@@ -21,9 +22,10 @@ export function ReceptionPatientForm({ patients }: { patients: Patient[] }) {
   const [patientType, setPatientType] = useState<"old" | "new">("old");
   const [patientQuery, setPatientQuery] = useState("");
   const [selectedPatientId, setSelectedPatientId] = useState("");
+  const [removedPatientIds, setRemovedPatientIds] = useState<string[]>([]);
   const deferredPatientQuery = useDeferredValue(patientQuery);
   const normalizedPatientQuery = deferredPatientQuery.trim().toLowerCase();
-  const filteredPatients = patients.filter((patient) =>
+  const filteredPatients = patients.filter((patient) => !patient.archivedAt && !removedPatientIds.includes(patient.id) &&
     `${patient.patientCode} ${patient.name} ${patient.phone}`
       .toLowerCase()
       .includes(normalizedPatientQuery),
@@ -135,13 +137,14 @@ export function ReceptionPatientForm({ patients }: { patients: Patient[] }) {
             </div>
             <div aria-label="Choose a patient; scroll for more records and columns" className="max-h-80 overflow-auto overscroll-contain" role="region" tabIndex={0}>
               <table className="w-full min-w-[420px] border-collapse text-left sm:min-w-[620px]">
-                <thead className="sticky top-0 bg-white text-xs uppercase tracking-[0.1em] text-slate-500 shadow-[0_1px_0_0_#e2e8f0]">
+                <thead className="sticky top-0 z-20 bg-white text-xs uppercase tracking-[0.1em] text-slate-500 shadow-[0_1px_0_0_#e2e8f0]">
                   <tr>
                     <th className="w-14 px-4 py-3 font-semibold">Pick</th>
                     <th className="px-4 py-3 font-semibold">Patient</th>
                     <th className="hidden px-4 py-3 font-semibold sm:table-cell">Age</th>
                     <th className="px-4 py-3 font-semibold">Phone</th>
                     <th className="hidden px-4 py-3 font-semibold sm:table-cell">Last visit</th>
+                    <th className="sticky right-0 bg-white px-4 py-3 text-right font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -171,6 +174,12 @@ export function ReceptionPatientForm({ patients }: { patients: Patient[] }) {
                         <td className="px-4 py-3 text-sm text-slate-700">{patient.phone}</td>
                         <td className="hidden px-4 py-3 text-sm text-slate-600 sm:table-cell">
                           {formatDateTime(patient.lastVisitAt)}
+                        </td>
+                        <td className={`sticky right-0 px-4 py-3 ${selected ? "bg-[#e7f0ff]" : "bg-white"}`}>
+                          <PatientRowActions disabled={loading} onDeleted={() => {
+                            setRemovedPatientIds((current) => [...current, patient.id]);
+                            if (selectedPatientId === patient.id) setSelectedPatientId("");
+                          }} patient={patient} />
                         </td>
                       </tr>
                     );

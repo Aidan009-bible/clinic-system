@@ -23,7 +23,7 @@ export default async function AdminPatientsPage() {
       subtitle="Search, scan, and review registered clinic patient records."
       title="Admin workspace"
     >
-      <PatientDirectory patients={snapshot.patients} />
+      <PatientDirectory patients={snapshot.patients.filter((patient) => !patient.archivedAt)} />
     </DashboardShell>
   );
 }
