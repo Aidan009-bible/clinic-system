@@ -52,7 +52,8 @@ for (const environment of ["production", "preview"]) {
     SUPABASE_SECRET_KEY: databaseKey,
     SESSION_SECRET: sessionSecret,
   })) {
-    await runVercel(["env", "add", name, environment, "--force", "--yes"], value);
+    const branch = environment === "preview" ? ["MKKT"] : [];
+    await runVercel(["env", "add", name, environment, ...branch, "--force", "--yes"], value);
   }
 }
 

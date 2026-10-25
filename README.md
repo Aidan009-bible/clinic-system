@@ -75,7 +75,7 @@ SESSION_SECRET=at-least-32-random-characters
 ```
 
 4. Sign into Vercel with `vercel login` and link with `vercel link --project clinic-mkkt`.
-5. Run `npm run deploy`. This verifies the database schema, generates SESSION_SECRET if missing, configures Production and Preview variables without printing their values, and deploys to Production.
+5. Run `npm run deploy`. This verifies the database schema, generates SESSION_SECRET if missing, configures Production and MKKT Preview variables without printing their values, and deploys to Production. The Vercel project's Production branch is MKKT.
 6. The first authenticated request creates the initial demo snapshot in `clinic_state`. Local JSON data is not automatically uploaded or migrated.
 
 Keep `SUPABASE_SECRET_KEY` server-only and never rename it with a `NEXT_PUBLIC_` prefix. The table has row level security enabled and no browser-access policy. Revision checks reject simultaneous conflicting saves instead of overwriting records; refresh and retry when that happens. Sessions are signed and expire after 12 hours. Vercel requires database credentials and SESSION_SECRET; it never falls back to local files.

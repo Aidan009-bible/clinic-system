@@ -4,6 +4,12 @@ This file tracks project changes from the UI/UX redesign phase onward.
 
 ## 2026-10-26
 
+### Live Supabase and Vercel setup
+
+- Resumed the existing Clinic-DEMO Supabase Free project and applied the clinic_state schema with row level security enabled.
+- Stored the existing server key locally in ignored configuration and generated the session signing secret.
+- Configured the Vercel production branch as MKKT and scoped Preview variables explicitly to MKKT for non-interactive CLI compatibility.
+
 ### MKKT responsive portals and deployment setup
 
 - Added shared mobile navigation, desktop sidebar scrolling, accessible collapsed labels, phone input sizing, and reduced-motion handling.
