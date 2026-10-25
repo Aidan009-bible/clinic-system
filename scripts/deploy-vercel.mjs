@@ -53,10 +53,12 @@ const variables = Object.entries({
 }).map(([key, value]) => ({ key, value, type: "encrypted", target: ["production", "preview"] }));
 
 // Send secrets through stdin and suppress the API response, which can contain values.
-await runVercel([
-  "api", `/v10/projects/${project.projectId}/env?upsert=true&teamId=${project.orgId}`,
-  "--method", "POST", "--input", "-", "--silent",
-], JSON.stringify(variables));
+for (const variable of variables) {
+  await runVercel([
+    "api", `/v10/projects/${project.projectId}/env?upsert=true&teamId=${project.orgId}`,
+    "--method", "POST", "--header", "Content-Type: application/json", "--input", "-", "--silent",
+  ], JSON.stringify(variable));
+}
 console.log("Production and Preview environment variables configured.");
 
 await runVercel(["deploy", "--prod", "--yes"]);
