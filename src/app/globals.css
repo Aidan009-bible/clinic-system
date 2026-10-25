@@ -26,3 +26,51 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+[data-ui="dashboard"] :is(section, article, form, label) {
+  min-width: 0;
+}
+
+[data-ui="dashboard"] :is(input, select, textarea) {
+  max-width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 1023px) {
+  [data-ui="dashboard"] [data-ui="sidebar"] {
+    border-radius: 18px;
+    box-shadow: 0 2px 8px rgb(8 42 96 / 3%);
+  }
+
+  [data-ui="dashboard"] [data-ui="sidebar"][data-menu-open="false"] :is(nav, [data-ui="account"], [data-ui="sidebar-footer"]) {
+    display: none;
+  }
+
+  [data-ui="dashboard"] [data-ui="sidebar"] nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 16px;
+  }
+
+  [data-ui="dashboard"] [data-ui="sidebar"] nav > p { display: none; }
+  [data-ui="dashboard"] [data-ui="sidebar-footer"] { padding-top: 12px; }
+}
+
+@media (max-width: 639px) {
+  [data-ui="dashboard"] [data-ui="page-header"] {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  [data-ui="dashboard"] [data-ui="page-header"] h2 { font-size: 1.5rem; }
+  [data-ui="dashboard"] :is(button, a) { touch-action: manipulation; }
+  [data-ui="dashboard"] :is(input:not([type="radio"]):not([type="checkbox"]), select, textarea) { font-size: 16px; }
+  [data-ui="dashboard"] [data-ui="medicine-reference"] { padding: 16px; }
+  [data-ui="dashboard"] [data-ui="medicine-editor"] { padding: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  [data-ui="dashboard"] * { transition-duration: 0s; }
+}

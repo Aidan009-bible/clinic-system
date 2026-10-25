@@ -3,8 +3,10 @@ import { revalidatePath } from "next/cache";
 
 import { getSession } from "@/lib/auth";
 import {
+  deleteQueuedVisit,
   issueBillAndReduceStock,
   startVisitConsultation,
+  updateQueuedVisit,
   updateVisitClinical,
 } from "@/lib/clinic-server";
 
@@ -30,9 +32,24 @@ export async function PATCH(
       quantity?: number;
     }>;
     consultationFee?: number;
+    symptoms?: string[];
   };
 
   try {
+    if (body.action === "update-queue") {
+      if (!["admin", "reception"].includes(session.role)) {
+        return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      }
+
+      const visit = await updateQueuedVisit(
+        id,
+        Array.isArray(body.symptoms) ? body.symptoms.map(String) : [],
+      );
+      revalidatePath("/reception/queue");
+      revalidatePath("/doctor/queue");
+      return NextResponse.json({ visit });
+    }
+
     if (body.action === "start-consultation") {
       if (session.role !== "doctor") {
         return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
@@ -85,6 +102,33 @@ export async function PATCH(
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to update visit." },
+      { status: 400 },
+    );
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  context: { params: Promise<{ id: string }> },
+) {
+  const session = await getSession();
+
+  if (!session || !["admin", "reception"].includes(session.role)) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  try {
+    const { id } = await context.params;
+    const visit = await deleteQueuedVisit(id);
+    revalidatePath("/reception/queue");
+    revalidatePath("/reception/overview");
+    revalidatePath("/doctor/queue");
+    revalidatePath("/doctor/overview");
+    revalidatePath("/admin/overview");
+    return NextResponse.json({ visit });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to delete visit." },
       { status: 400 },
     );
   }

@@ -133,15 +133,15 @@ export function ReceptionPatientForm({ patients }: { patients: Patient[] }) {
                 {filteredPatients.length} patient{filteredPatients.length === 1 ? "" : "s"} found
               </p>
             </div>
-            <div className="max-h-80 overflow-auto">
-              <table className="w-full min-w-[620px] border-collapse text-left">
+            <div aria-label="Choose a patient; scroll for more records and columns" className="max-h-80 overflow-auto overscroll-contain" role="region" tabIndex={0}>
+              <table className="w-full min-w-[420px] border-collapse text-left sm:min-w-[620px]">
                 <thead className="sticky top-0 bg-white text-xs uppercase tracking-[0.1em] text-slate-500 shadow-[0_1px_0_0_#e2e8f0]">
                   <tr>
                     <th className="w-14 px-4 py-3 font-semibold">Pick</th>
                     <th className="px-4 py-3 font-semibold">Patient</th>
-                    <th className="px-4 py-3 font-semibold">Age</th>
+                    <th className="hidden px-4 py-3 font-semibold sm:table-cell">Age</th>
                     <th className="px-4 py-3 font-semibold">Phone</th>
-                    <th className="px-4 py-3 font-semibold">Last visit</th>
+                    <th className="hidden px-4 py-3 font-semibold sm:table-cell">Last visit</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -167,9 +167,9 @@ export function ReceptionPatientForm({ patients }: { patients: Patient[] }) {
                           <p className="font-semibold text-slate-950">{patient.name}</p>
                           <p className="mt-1 text-xs text-slate-500">{patient.patientCode}</p>
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-700">{patient.age}</td>
+                        <td className="hidden px-4 py-3 text-sm text-slate-700 sm:table-cell">{patient.age}</td>
                         <td className="px-4 py-3 text-sm text-slate-700">{patient.phone}</td>
-                        <td className="px-4 py-3 text-sm text-slate-600">
+                        <td className="hidden px-4 py-3 text-sm text-slate-600 sm:table-cell">
                           {formatDateTime(patient.lastVisitAt)}
                         </td>
                       </tr>

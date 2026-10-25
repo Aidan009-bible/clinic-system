@@ -2,6 +2,7 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { demoClinicSnapshot } from "@/lib/demo-data";
+import { getSupabaseServerClient } from "@/lib/supabase-server";
 import type {
   ClinicSnapshot,
   DemoUser,
@@ -14,6 +15,7 @@ import type {
 } from "@/lib/types";
 
 const localStorePath = path.join(process.cwd(), "data", "clinic-store.json");
+const snapshotRevisions = new WeakMap<ClinicSnapshot, number>();
 
 function cloneSnapshot(snapshot: ClinicSnapshot) {
   return JSON.parse(JSON.stringify(snapshot)) as ClinicSnapshot;
@@ -218,9 +220,9 @@ function normalizeSnapshot(raw: unknown): ClinicSnapshot {
           ...mergedUsers.filter((user) => user.username !== "doctor1" && user.username !== "doctor2"),
           demoClinicSnapshot.users.find((user) => user.username === "doctor")!,
         ],
-    patients: patients.length ? patients : demoClinicSnapshot.patients,
-    visits: visits.length ? visits : demoClinicSnapshot.visits,
-    medicines: medicines.length ? medicines : demoClinicSnapshot.medicines,
+    patients,
+    visits,
+    medicines,
     reports: demoClinicSnapshot.reports,
   });
 }
@@ -270,7 +272,40 @@ async function ensureLocalStore() {
   }
 }
 
-async function readLocalStore() {
+async function readLocalStore(): Promise<ClinicSnapshot> {
+  const supabase = getSupabaseServerClient();
+
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("clinic_state")
+      .select("snapshot, revision")
+      .eq("id", "default")
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Could not read Supabase clinic data: ${error.message}`);
+    }
+
+    if (!data) {
+      const { error: seedError } = await supabase.from("clinic_state").upsert({
+        id: "default",
+        snapshot: cloneSnapshot(demoClinicSnapshot),
+        revision: 0,
+      }, { onConflict: "id", ignoreDuplicates: true });
+
+      if (seedError) throw new Error(`Could not initialize clinic data: ${seedError.message}`);
+      return readLocalStore();
+    }
+
+    const snapshot = normalizeSnapshot(data.snapshot);
+    snapshotRevisions.set(snapshot, Number(data.revision));
+    return snapshot;
+  }
+
+  if (process.env.VERCEL) {
+    throw new Error("Configure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY in Vercel before using the clinic.");
+  }
+
   await ensureLocalStore();
   let raw = "";
 
@@ -297,6 +332,30 @@ async function readLocalStore() {
 }
 
 async function writeLocalStore(snapshot: ClinicSnapshot) {
+  const supabase = getSupabaseServerClient();
+
+  if (supabase) {
+    const revision = snapshotRevisions.get(snapshot);
+    if (revision === undefined) throw new Error("Refresh the clinic before saving changes.");
+
+    // Compare revisions so simultaneous staff updates cannot overwrite each other.
+    const { data, error } = await supabase.from("clinic_state")
+      .update({ snapshot, revision: revision + 1, updated_at: new Date().toISOString() })
+      .eq("id", "default")
+      .eq("revision", revision)
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`Could not save Supabase clinic data: ${error.message}`);
+    }
+
+    if (!data) throw new Error("Another staff member saved changes. Refresh and try again.");
+    snapshotRevisions.set(snapshot, revision + 1);
+
+    return;
+  }
+
   await mkdir(path.dirname(localStorePath), { recursive: true });
   const tempPath = `${localStorePath}.tmp`;
   await writeFile(tempPath, JSON.stringify(snapshot, null, 2), "utf8");
@@ -469,6 +528,40 @@ export async function createVisit(input: {
   return visit;
 }
 
+export async function updateQueuedVisit(visitId: string, symptoms: string[]) {
+  const snapshot = await readLocalStore();
+  const visit = snapshot.visits.find((entry) => entry.id === visitId);
+
+  if (!visit) {
+    throw new Error("Visit not found.");
+  }
+
+  if (!["Waiting", "In Consultation"].includes(visit.status)) {
+    throw new Error("Only an active queue visit can be edited by reception.");
+  }
+
+  visit.symptoms = symptoms.map((symptom) => symptom.trim()).filter(Boolean);
+  await writeLocalStore(snapshot);
+  return visit;
+}
+
+export async function deleteQueuedVisit(visitId: string) {
+  const snapshot = await readLocalStore();
+  const visitIndex = snapshot.visits.findIndex((entry) => entry.id === visitId);
+
+  if (visitIndex === -1) {
+    throw new Error("Visit not found.");
+  }
+
+  if (!["Waiting", "In Consultation"].includes(snapshot.visits[visitIndex].status)) {
+    throw new Error("Only an active queue visit can be deleted by reception.");
+  }
+
+  const [visit] = snapshot.visits.splice(visitIndex, 1);
+  await writeLocalStore(snapshot);
+  return visit;
+}
+
 export async function updateVisitClinical(
   visitId: string,
   payload: {
@@ -529,6 +622,14 @@ export async function issueBillAndReduceStock(visitId: string) {
 
   if (!visit) {
     throw new Error("Visit not found.");
+  }
+
+  if (visit.status === "Completed" || visit.receiptIssuedAt) {
+    return visit;
+  }
+
+  if (visit.status !== "Ready for Billing") {
+    throw new Error("The doctor must finish this consultation before issuing a bill.");
   }
 
   for (const item of visit.prescription) {

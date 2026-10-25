@@ -333,7 +333,8 @@ export function MedicineStockTable({
         </div>
       ) : null}
 
-      <div className="mt-5 overflow-x-auto rounded-[20px] border border-[#d8e4ec]">
+      <p className="mt-4 text-xs text-[#61758a] lg:hidden">Swipe the table sideways to see every column.</p>
+      <div aria-label="Medicine stock table, scroll horizontally for all columns" className="mt-3 max-w-full overflow-x-auto overscroll-x-contain rounded-[20px] border border-[#d8e4ec]" role="region" tabIndex={0}>
         <table className="min-w-full bg-white text-sm">
           <thead className="bg-[#f7fafc] text-left text-xs uppercase tracking-[0.1em] text-[#61758a]">
             <tr>

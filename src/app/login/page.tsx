@@ -38,7 +38,7 @@ export default async function LoginPage() {
       <div className="mx-auto grid min-h-screen w-full max-w-7xl items-center px-4 py-6 sm:px-7 lg:px-10">
         <section className="overflow-hidden rounded-[24px] border border-[#d8e4ec] bg-white shadow-[0_12px_48px_rgba(7,27,51,0.08)]">
           <div className="grid lg:grid-cols-[minmax(0,1fr)_440px]">
-            <div className="relative flex flex-col justify-between overflow-hidden p-7 sm:p-9 lg:p-10">
+            <div className="relative order-2 flex flex-col justify-between overflow-hidden p-5 sm:p-9 lg:order-1 lg:p-10">
               <div>
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
@@ -100,8 +100,8 @@ export default async function LoginPage() {
 
             </div>
 
-            <aside className="flex items-center bg-[#f7fafc] p-5 sm:p-7 lg:border-l lg:border-[#d8e4ec]">
-              <div className="w-full rounded-[20px] border border-[#d8e4ec] bg-white p-6 shadow-sm">
+            <aside className="order-1 flex min-w-0 items-center bg-[#f7fafc] p-3 sm:p-7 lg:order-2 lg:border-l lg:border-[#d8e4ec]">
+              <div className="w-full min-w-0 rounded-[20px] border border-[#d8e4ec] bg-white p-5 shadow-sm sm:p-6">
                 <div className="mb-6">
                   <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2f80ed]">
                     Staff sign in

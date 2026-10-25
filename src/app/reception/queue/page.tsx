@@ -1,4 +1,5 @@
 import { DashboardShell } from "@/components/dashboard-shell";
+import { ReceptionQueueActions } from "@/components/reception-queue-actions";
 import { requireSession } from "@/lib/auth";
 import { getClinicSnapshot } from "@/lib/clinic-server";
 
@@ -36,7 +37,7 @@ export default async function ReceptionQueuePage() {
           <p className="mt-2 text-sm text-[#61758a]">Active visits across all check-in dates, listed in check-in order.</p>
         </div>
         {visits.length ? <div aria-hidden="true" className="reception-queue-row bg-[#f7fafc] px-6 py-3 text-xs font-semibold uppercase tracking-[0.1em] text-[#61758a]">
-          <span>No.</span><span>Patient</span><span>Checked in</span><span>Status</span>
+          <span>No.</span><span>Patient</span><span>Checked in</span><span>Status</span><span>Actions</span>
         </div> : null}
         <div className="divide-y divide-[#e7eef3]">
           {visits.map((visit, index) => (
@@ -56,6 +57,12 @@ export default async function ReceptionQueuePage() {
               }`}>
                 {visit.status === "In Consultation" ? "With doctor" : "Waiting"}
               </span>
+              <ReceptionQueueActions
+                inConsultation={visit.status === "In Consultation"}
+                patientName={visit.patientName}
+                symptoms={visit.symptoms}
+                visitId={visit.id}
+              />
             </article>
           ))}
           {!visits.length ? (

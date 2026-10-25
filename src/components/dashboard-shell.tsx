@@ -86,17 +86,18 @@ export function DashboardShell({
 }) {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const activeItem = navItems.find((item) => item.href === activeHref) ?? navItems[0];
 
   return (
-    <main className="min-h-screen bg-[#f2f6f9] text-[#071b33]">
-      <div className="mx-auto w-full max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8">
+    <main data-ui="dashboard" className="min-h-screen bg-[#f2f6f9] text-[#071b33]">
+      <div className="mx-auto w-full max-w-[1600px] px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
         <div className={`grid gap-5 transition-[grid-template-columns] duration-300 ${
           collapsed
             ? "lg:grid-cols-[88px_minmax(0,1fr)]"
             : "lg:grid-cols-[280px_minmax(0,1fr)]"
         }`}>
-          <aside data-ui="sidebar" className={`rounded-[24px] border border-[#d8e4ec] bg-white p-4 text-[#071b33] shadow-[0_16px_48px_rgba(8,42,96,0.08)] transition-all duration-300 lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] ${
+          <aside data-ui="sidebar" data-menu-open={mobileMenuOpen} className={`min-w-0 rounded-[24px] border border-[#d8e4ec] bg-white p-4 text-[#071b33] shadow-[0_16px_48px_rgba(8,42,96,0.08)] transition-all duration-300 lg:sticky lg:top-4 lg:h-[calc(100dvh-2rem)] lg:overflow-y-auto ${
             collapsed ? "lg:px-3" : ""
           }`}>
             <div className="flex h-full flex-col">
@@ -110,6 +111,18 @@ export function DashboardShell({
                     <p className="truncate text-xs capitalize text-[#61758a]">{session.role} workspace</p>
                   </div>
                 </div>
+                <button
+                  aria-controls="workspace-navigation"
+                  aria-expanded={mobileMenuOpen}
+                  aria-label={mobileMenuOpen ? "Close navigation" : "Open navigation"}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#d8e4ec] bg-[#f7fafc] text-[#0b2a5b] lg:hidden"
+                  onClick={() => setMobileMenuOpen((current) => !current)}
+                  type="button"
+                >
+                  <svg aria-hidden="true" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" d={mobileMenuOpen ? "M6 6l12 12M6 18 18 6" : "M4 6h16M4 12h16M4 18h16"} />
+                  </svg>
+                </button>
                 <button
                   aria-label={collapsed ? "Expand sidebar" : "Minimize sidebar"}
                   className={`hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#d8e4ec] bg-[#f7fafc] text-[#61758a] transition hover:border-[#2f80ed] hover:text-[#0b2a5b] lg:flex ${
@@ -130,7 +143,7 @@ export function DashboardShell({
                 <p className="mt-1 truncate text-sm font-semibold text-[#071b33]">{session.username}</p>
               </div>
 
-              <nav className="mt-6 flex flex-col gap-2">
+              <nav aria-label="Workspace navigation" id="workspace-navigation" className="mt-6 flex flex-col gap-2">
                 <p className={`px-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#8ca0b4] ${collapsed ? "lg:hidden" : ""}`}>
                   Navigation
                 </p>
@@ -148,6 +161,7 @@ export function DashboardShell({
                           : "border-transparent text-[#61758a] hover:border-[#d8e4ec] hover:bg-[#f7fafc] hover:text-[#0b2a5b]"
                       }`}
                       href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
                       key={item.href}
                       title={collapsed ? item.label : undefined}
                     >
@@ -156,6 +170,7 @@ export function DashboardShell({
                       ) : null}
                       <span className={active ? "shrink-0 text-[#2f80ed]" : "shrink-0"}><NavIcon label={item.label} /></span>
                       <span className={`truncate ${collapsed ? "lg:hidden" : ""}`}>{item.label}</span>
+                      <span className="sr-only">{collapsed ? item.label : ""}</span>
                     </Link>
                   );
                 })}

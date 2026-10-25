@@ -5,10 +5,10 @@ This project is a working clinic management demo with:
 - cookie-based demo authentication
 - role-based dashboards for `admin`, `doctor`, and `reception`
 - backend API routes for login, patient creation, visit updates, counter completion, and stock changes
-- local JSON demo storage for quick testing
-- Supabase schema and seed files for a future database-backed setup
+- local JSON fallback storage for quick testing
+- Supabase PostgreSQL persistence for Vercel deployments
 
-The current project phase is UI/UX redesign only. Backend logic, routes, authentication, and clinic workflows should stay unchanged unless a bug fix is required.
+The MKKT branch adds responsive layouts for phones, tablets, and computers, queue actions, and hosted persistence for Vercel.
 
 ## Default login
 
@@ -60,27 +60,33 @@ Completed UI/UX refresh areas:
 
 See `PROJECT_SPEC.md` and `CHANGELOG.md` for the current design plan and edited files.
 
-## Supabase setup
+## Supabase setup for Vercel
 
-The app currently runs locally without Supabase. The committed Supabase files are available if the project later needs database-backed testing.
+Without a server secret, local development uses `data/clinic-store.json`. When both variables below are configured, all clinic records are read from and saved to Supabase PostgreSQL.
 
-1. Copy `.env.example` to `.env.local`
-2. Add:
+1. Create a Supabase project.
+2. Run `supabase/schema.sql` once in the Supabase SQL Editor.
+3. Copy `.env.example` to `.env.local` and add:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SECRET_KEY=your-server-secret-key
+SESSION_SECRET=at-least-32-random-characters
 ```
 
-3. In Supabase SQL Editor, rerun:
+4. Sign into Vercel with `vercel login` and link with `vercel link --project clinic-mkkt`.
+5. Run `npm run deploy`. This verifies the database schema, generates SESSION_SECRET if missing, configures Production and Preview variables without printing their values, and deploys to Production.
+6. The first authenticated request creates the initial demo snapshot in `clinic_state`. Local JSON data is not automatically uploaded or migrated.
 
-- `supabase/schema.sql`
-- `supabase/seed.sql`
+Keep `SUPABASE_SECRET_KEY` server-only and never rename it with a `NEXT_PUBLIC_` prefix. The table has row level security enabled and no browser-access policy. Revision checks reject simultaneous conflicting saves instead of overwriting records; refresh and retry when that happens. Sessions are signed and expire after 12 hours. Vercel requires database credentials and SESSION_SECRET; it never falls back to local files.
 
-Important:
-- this updated schema adds demo passwords plus visit diagnosis, notes, and prescription fields
-- row level security is disabled on these demo tables so the anon key can be used for testing
-- if Supabase is not ready, the app will store demo changes in `data/clinic-store.json`
+This snapshot-backed storage and the displayed shared demo accounts are for initial testing. Before live clinical use, configure individual staff accounts, production authentication, normalized tables, and backups. Supabase Free can pause after inactivity and has storage limits.
+
+## Responsive layouts
+
+The sidebar has a mobile menu on phones/tablets and minimize/expand controls on desktop. Inventory remains a spreadsheet with horizontal scrolling inside the table. Forms stack on phones, input text avoids mobile browser zoom, and sign-in appears first on small screens.
+
+Validated at 390, 768, 1024, and 1440 pixels, plus the consultation form at 320 pixels. Run `npm test`, `npm run lint`, and `npm run build` before deploying.
 
 ## What each role can test
 

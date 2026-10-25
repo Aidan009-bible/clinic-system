@@ -75,8 +75,15 @@
   font-weight: 500;
 }
 .admin-workspace [data-ui="patient-directory"] > div:first-child > div:first-child > div:last-child {
-  width: 540px;
-  flex-shrink: 0;
+  width: 100%;
+  max-width: 540px;
+}
+
+@media (min-width: 1280px) {
+  .admin-workspace [data-ui="patient-directory"] > div:first-child > div:first-child > div:last-child {
+    width: 460px;
+    flex-shrink: 0;
+  }
 }
 .admin-workspace [data-ui="patient-directory"] > div:first-child > div:first-child > div:last-child p:first-child {
   min-height: 32px;

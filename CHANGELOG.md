@@ -2,6 +2,43 @@
 
 This file tracks project changes from the UI/UX redesign phase onward.
 
+## 2026-10-26
+
+### MKKT responsive portals and deployment setup
+
+- Added shared mobile navigation, desktop sidebar scrolling, accessible collapsed labels, phone input sizing, and reduced-motion handling.
+- Fixed inventory grid and patient-summary overflow, contained wide tables, and simplified patient selection on phones.
+- Prioritized the sign-in form on mobile and checked Admin, Doctor, and Reception at phone/tablet/laptop/desktop widths.
+- Added signed expiring sessions, atomic revision checks for hosted saves, repeat-billing protection, and preservation of empty collections.
+- Added five automated hosting/data-integrity tests, Singapore Vercel region configuration, upload exclusions, and a deployment script that verifies Supabase before publishing.
+
+Changed files: `src/components/dashboard-shell.tsx`, `src/app/globals.css`, `src/app/admin/admin.css`, `src/components/admin-actions.tsx`, `src/components/medicine-stock-table.tsx`, `src/components/reception-actions.tsx`, `src/app/reception/reception.css`, `src/app/login/page.tsx`, `src/app/layout.tsx`, `src/components/reception-queue-actions.tsx`, `src/lib/auth.ts`, `src/app/api/auth/login/route.ts`, `src/lib/clinic-server.ts`, `src/lib/supabase-server.ts`, `supabase/schema.sql`, `tests/hosting.test.cjs`, `scripts/deploy-vercel.mjs`, `vercel.json`, `.vercelignore`, `package.json`, `.env.example`, `README.md`, `CHANGELOG.md`.
+
+## 2026-10-25
+
+### Reception queue actions and Supabase persistence
+
+- Added Edit and Delete actions for active queue visits. Reception can update optional symptoms or remove an incorrect check-in, with an explicit warning before cancelling an in-progress consultation.
+- Added authorized queue update/delete API behavior and revalidation for affected role dashboards.
+- Added responsive queue action layout and an accessible focused edit dialog.
+- Switched hosted persistence to a server-only Supabase PostgreSQL state table while retaining local JSON as the development fallback.
+- Replaced the obsolete schema and seed setup with an RLS-protected `clinic_state` table and documented Vercel environment setup.
+- Verified with TypeScript, ESLint, and a successful production build.
+
+Changed files:
+
+- `.env.example`
+- `README.md`
+- `src/app/api/visits/[id]/route.ts`
+- `src/app/reception/queue/page.tsx`
+- `src/app/reception/reception.css`
+- `src/components/reception-queue-actions.tsx` (new)
+- `src/lib/clinic-server.ts`
+- `src/lib/supabase-server.ts`
+- `supabase/schema.sql`
+- `supabase/seed.sql` (removed)
+- `CHANGELOG.md`
+
 ## 2026-10-20
 
 ### Login desktop UI/UX polish

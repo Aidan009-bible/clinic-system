@@ -59,7 +59,7 @@ export function AdminActions({
   }
 
   return (
-    <div className="admin-inventory grid gap-5">
+    <div className="admin-inventory grid min-w-0 grid-cols-1 gap-5">
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
           ["Medicine types", medicines.length.toLocaleString(), "Items in inventory"],
