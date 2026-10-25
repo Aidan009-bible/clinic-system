@@ -8,7 +8,7 @@ This file tracks project changes from the UI/UX redesign phase onward.
 
 - Resumed the existing Clinic-DEMO Supabase Free project and applied the clinic_state schema with row level security enabled.
 - Stored the existing server key locally in ignored configuration and generated the session signing secret.
-- Configured the Vercel production branch as MKKT and scoped Preview variables explicitly to MKKT for non-interactive CLI compatibility.
+- Configured the Vercel production branch as MKKT and used Vercel's environment API for non-interactive Production and Preview secret configuration.
 
 ### MKKT responsive portals and deployment setup
 

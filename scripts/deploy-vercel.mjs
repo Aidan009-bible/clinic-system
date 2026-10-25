@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { appendFile, access } from "node:fs/promises";
+import { appendFile, readFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { createClient } from "@supabase/supabase-js";
 
@@ -17,7 +17,7 @@ if (!url || !databaseKey) {
   process.exit(1);
 }
 
-await access(".vercel/project.json").catch(() => {
+const project = await readFile(".vercel/project.json", "utf8").then(JSON.parse).catch(() => {
   throw new Error("Link this directory first: vercel link --project clinic-mkkt");
 });
 
@@ -46,15 +46,17 @@ function runVercel(args, input) {
   });
 }
 
-for (const environment of ["production", "preview"]) {
-  for (const [name, value] of Object.entries({
-    NEXT_PUBLIC_SUPABASE_URL: url,
-    SUPABASE_SECRET_KEY: databaseKey,
-    SESSION_SECRET: sessionSecret,
-  })) {
-    const branch = environment === "preview" ? ["MKKT"] : [];
-    await runVercel(["env", "add", name, environment, ...branch, "--force", "--yes"], value);
-  }
-}
+const variables = Object.entries({
+  NEXT_PUBLIC_SUPABASE_URL: url,
+  SUPABASE_SECRET_KEY: databaseKey,
+  SESSION_SECRET: sessionSecret,
+}).map(([key, value]) => ({ key, value, type: "encrypted", target: ["production", "preview"] }));
+
+// Send secrets through stdin and suppress the API response, which can contain values.
+await runVercel([
+  "api", `/v10/projects/${project.projectId}/env?upsert=true&teamId=${project.orgId}`,
+  "--method", "POST", "--input", "-", "--silent",
+], JSON.stringify(variables));
+console.log("Production and Preview environment variables configured.");
 
 await runVercel(["deploy", "--prod", "--yes"]);
